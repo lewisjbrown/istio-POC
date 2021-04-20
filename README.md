@@ -72,4 +72,19 @@ $ kubectl exec "$(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metad
 
 ```
 
-If mutual TLS is present then the X-Forwarded-Client-Cert should be returned. 
+If mutual TLS is present then the X-Forwarded-Client-Cert is returned. For a further test, we can stop all non mutual TLS traffic in the mesh. This is achieved by setting a mesh-wide peer authentication policy with the mutual TLS mode set to STRICT. This is done using the following configuration file:
+
+```
+$ kubectl apply -f - <<EOF
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: "default"
+  namespace: "istio-system"
+spec:
+  mtls:
+    mode: STRICT
+EOF
+```
+
+Mutual TLS can then be tested again using the X-Forwarded-Client-Cert command above. 
