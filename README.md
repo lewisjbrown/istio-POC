@@ -65,7 +65,14 @@ $ kubectl apply -f <(istioctl kube-inject -f samples/httpbin/httpbin.yaml) -n fo
 $ kubectl apply -f <(istioctl kube-inject -f samples/sleep/sleep.yaml) -n foo
 ```
 
-When using mutual TLS, the proxy injects the X-Forwarded-Client-Cert header to the upstream request to the backend. That header’s presence is evidence that mutual TLS is used. So, we can test for mutual TLS using the following command:
+We can then use kubernetes exec to curl between the pods and see the response code: 
+
+```
+kubectl exec "$(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name})" -c sleep -n foo -- curl -s "http://httpbin.foo:8000/ip" -s -o /dev/null -w "sleep.foo to httpbin.foo: %{http_code}
+```
+If successful the responce code should be 200.
+
+When using mutual TLS, the proxy injects the X-Forwarded-Client-Cert header to the upstream request to the backend. That header’s presence is evidence that mutual TLS is used. So, lets test for mutual TLS using the following command:
 
 ```
 $ kubectl exec "$(kubectl get pod -l app=sleep -n foo -o jsonpath={.items..metadata.name})" -c sleep -n foo -- curl -s http://httpbin.foo:8000/headers -s | grep X-Forwarded-Client-Cert | sed 's/Hash=[a-z0-9]*;/Hash=<redacted>;/'
@@ -87,4 +94,4 @@ spec:
 EOF
 ```
 
-Mutual TLS can then be tested again using the X-Forwarded-Client-Cert command above. 
+Mutual TLS can be tested once again using the X-Forwarded-Client-Cert command above. 
